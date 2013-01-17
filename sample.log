@@ -1,0 +1,279 @@
+[00:01] <ikonia> zurich: you can't run raid 5 on 2 disks
+[00:01] <jiboumans> hey smoser, are you around per chance? It looks like I'm running into this bug https://bugs.launchpad.net/ubuntu/+source/ec2-ami-tools/+bug/672986, although I have the updated package installed. (lucid, 1.3-45758-0ubuntu1)
+[00:01] <uvirtbot> Launchpad bug 672986 in euca2ools "euca-bundle-vol/ec2-bundle-vol should copy filesystem uuid" [High,Fix released]
+[00:01] <ikonia> zurich: you need to replace the failed disk to start the array for a rebuild
+[00:02] <jiboumans> smoser, specifically: $ sudo blkid /mnt/tmp/ami-x86_64/image /dev/sda1
+[00:02] <jiboumans>  /mnt/tmp/ami-x86_64/image: UUID="b47c47d0-214f-49b1-8e03-140d6f67a43e" SEC_TYPE="ext2" TYPE="ext3"
+[00:02] <jiboumans>  /dev/sda1: LABEL="cloudimg-rootfs" UUID="74aad503-152c-47e8-8f1d-cd7254872276" TYPE="ext3"
+[00:20] <jiboumans> smoser: it looks like the fix was in the .1 package, which I missed. according to the bug, it should have made it into multiverse, but didn't.. there's a newer backports version available though that i'll try next
+[00:22] <jiboumans> it's asciibetically lower though: 1.3.49953-0ubuntu1~lucid1 vs *** 1.3-45758-0ubuntu1
+[00:27] <smoser> jiboumans, you're saying the uuid isn't getting copied ? where does your ec2-ami-tools come from?
+[00:27] <smoser> (apt-cache policy)
+[00:27] <jiboumans> smoser: https://gist.github.com/f750112981dd64bbb78b
+[00:29] <smoser> i would think that you should see the -updates version (1.3-45758-0ubuntu1.1 )
+[00:29] <smoser> which pro bably has a fix in it.
+[00:29] <jiboumans> indeed, the 1.1 has the fix, the 1 doesn't
+[00:29] <smoser> but the multi-verse package is higher upstream version but no fix for that.
+[00:30] <smoser> my suggestion would be either
+[00:30] <jiboumans> smoser: i have lucid/updates in my sources.list, so i'm confused too
+[00:30] <smoser>  * ditch -backports
+[00:30] <smoser>  * use https://launchpad.net/~awstools-dev/+archive/awstools
+[00:31] <jiboumans> smoser: you mean the natty backport doesn't have a fix? i'm confused.
+[00:31] <smoser> natty backport?
+[00:32] <smoser> the -backports does not have the fix.
+[00:32] <smoser> https://launchpad.net/ubuntu/+source/ec2-ami-tools
+[00:32] <smoser> look at the dates on the lucid packages and you'll see.
+[00:32] <smoser> if you ditch -backports, purge the thing, get the -updates version, you should get a good version.
+[00:35] <jiboumans> smoser: it looks like i don't have lucid-updates/multiverse, and that's the problem of not finding the update
+[00:35] <smoser> that *would* be still less than the -backports version
+[00:36] <smoser> so you will need to get rid of it from backports
+[00:36] <smoser> (sorry for that)
+[00:36] <jiboumans> smoser: got it. although note the 1.3. vs 1.3- in the version, which is why i think the 'older' version got selected
+=== cpg|away is now known as cpg
+=== rnbrady_ is now known as rnbrady
+[01:21] <quantalrabbit> trying to debuild php5-5.3.10 for precise and failed pretty far along the build process.  getting the following error: "debian/setup-mysql.sh: 44: debian/setup-mysql.sh: USER: parameter not set" then build exits with status 2.  Any help greatly appreciated.
+[01:23] <TheLordOfTime> uh...
+[01:23] <TheLordOfTime> what's wrong with 5.3.10-1ubuntu3.4?
+[01:23] <TheLordOfTime> !info php5 precise
+[01:23] <ubottu> php5 (source: php5): server-side, HTML-embedded scripting language (metapackage). In component main, is optional. Version 5.3.10-1ubuntu3.4 (precise), package size 1 kB, installed size 21 kB
+[01:23] <TheLordOfTime> quantalrabbit, ^
+[01:24] <xnox> quantalrabbit: exact command line parameters & output would be appreciated in a pastebin.
+[01:24] <TheLordOfTime> also, what's wrong with the version in precise right now...?
+[01:26] <sarnold> (and how did you fix the "binary file contents changed" error?)
+[01:26] <quantalrabbit> TheLordOfTime: There's a regression from 5.3.8 whereby output from workers does not get logged to php-fpm.log even when catch_workers_output is set.  https://bugs.php.net/bug.php?id=61045
+[01:26] <TheLordOfTime> quantalrabbit, do they have an upstream patch?
+[01:27] <TheLordOfTime> quantalrabbit, better question: does a bug for that issue exist in ubuntu?
+[01:27] <quantalrabbit> TheLordOfTime: I think it is fixed in the latest version of PHP 5.3.15+
+[01:27] <TheLordOfTime> (if so, i'll see if I can't SRU that patch in)
+[01:28] <TheLordOfTime> ... wait did i just volunteer to take yet ANOTHER SRU under my wing...
+[01:28] <quantalrabbit> TheLordOfTime: sorry, I don't if a but for that issue exists.  i'll try google and see if i can find out.
+[01:28] <TheLordOfTime> ... crap...
+[01:28] <quantalrabbit> TheLordOfTime: you're a good man.
+[01:28] <TheLordOfTime> quantalrabbit, if one doesn't exist, file one and link it here.
+[01:28] <TheLordOfTime> quantalrabbit, just another random tiresome job for me to add to the pile
+[01:29]  * TheLordOfTime points at the stack of 20 triage-related things he is currently working with behind the scenes.
+[01:30] <TheLordOfTime> ... and i'm about fed up with php5 right now, since this patch keeps FTBFS (not the one you're referencing)
+[01:33] <quantalrabbit> TheLordOfTime: i probably don't know php5 in any depth close to you but seems like you're the caretaker.  thank you for your work!
+[01:33] <TheLordOfTime> under no circumstances call me the caretaker of php5
+[01:33] <TheLordOfTime> i'm just a member of the server team, and i'm not the only one who works on php5.
+[01:33] <TheLordOfTime> call me caretaker of nginx if you want, nginx's support team LOVES that i know what i'm doing with it...
+[01:33] <quantalrabbit> ok, pardon my mistake
+[01:34] <TheLordOfTime> i personally hate php5...
+[01:34] <TheLordOfTime> but i will SRU it if i must...
+[01:34]  * TheLordOfTime glares evilly at the php5 source code.
+[01:34] <TheLordOfTime> (this is the daily "glare at php5 for being evil" part of my day)
+[01:35] <quantalrabbit> haha.  i hate php5 too.  and the god-awful drupal code i've inherited.
+[01:37] <TheLordOfTime> actually that's a good question, is the server team autosubscribed to all  php5 bugs?
+[01:40] <quantalrabbit> TheLordOfTime: Looks like someone already reported this: https://bugs.launchpad.net/ubuntu/+source/php5/+bug/999969  Should I create another one?
+[01:40] <uvirtbot> Launchpad bug 999969 in php5 "PHP5 doesn't send errors or warnings to fastcgi clients" [Undecided,Confirmed]
+[01:40] <TheLordOfTime> nah, i'll subscribe to this.
+[01:41] <quantalrabbit> TheLordOfTime: thanks!
+[01:41] <TheLordOfTime> just mark that it affects you and subscribe, i'll work on it probably tomorrow
+[01:42] <quantalrabbit> TheLordOfTime: marked affectation.
+[01:46] <quantalrabbit> TheLordOfTime: apologize if this a rude question... i'm guessing that a stable release update is a long process.  what are the chances that php5 for precise will be updated in the near future (2 months)?
+[01:53] <sarnold> quantalrabbit: with the SRUs I've seen done so far, it seems to depend strongly upon how much testing is done by those affected by the bug...
+[01:53] <sarnold> quantalrabbit: if you haven't seen this yet, give it a quick read: https://wiki.ubuntu.com/StableReleaseUpdates
+[01:54] <sarnold> quantalrabbit: I've seen some get deleted, and the work thrown away, if no one gets around to testing it within 105 days... and I've seen some go through in ~week.
+[01:54] <quantalrabbit> sarnold: thanks for the insight
+=== broder__ is now known as broder
+=== broder is now known as broder___
+=== broder___ is now known as broder
+=== aarcane_ is now known as aarcane
+=== ibiris|afk is now known as ibiris
+[07:40] <koolhead17> YAY we are still alive!!
+[07:52] <oracle> installed server 12.10 last night and chose ecryptfs for home directory, but now, when i try to ssh into the box with private key, i get access denied (public key) and i must restart sshd before I can login remotely.  Im guessing that it's because my authorized_keys file is not readable by sshd due to ecryptfs?  when i log in to restart ssh im obviously opening the encryption. anyway around this?
+[08:07] <SpamapS> oracle: I believe you can have auth keys in the dir underneath the ecryptfs mount
+[08:08] <oracle> yes, just read that on ubuntuforums, but it's been working a few times before I restarted the box
+[08:08] <oracle> im now baffled as to why it was working at all directly after installation
+[08:10] <oracle> after install, I continued configuring it remotely, using priv/pub key and it was all working, then i configured nfs and restarted the box, and no longer get in unless im actually logged in at the console
+=== Guest69065 is now known as Graet
+=== yofel_ is now known as yofel
+=== ibiris is now known as ibiris|afk
+=== Ursinha is now known as Ursinha-afk
+=== Ursinha-afk is now known as Ursinha
+=== daker_ is now known as daker
+=== ibiris|afk is now known as ibiris
+=== cpg is now known as cpg|away
+[14:59] <TheLordOfTime> SpamapS, ping
+[14:59] <TheLordOfTime> if you're around :P
+[14:59] <Hilarie> Got a question, I am running ubuntu server 12.10, running off of a USB stick, with a 2tb external HDD connected via USB2.0, I about an hour ago, transferred a massive amount of data, around 200gb, at what I am guessing was a bit faster then the HDDs speed because it slowed down after a bit, now the free -m is still showing, around 700mb in the buffer (not cache)
+[15:00] <Hilarie> I am worried that if I have a power outage, I will lose, a random part of that data, why would that much be staying in the buffer?
+[15:05] <xnox> Hilarie: did you run $ sync
+[15:05] <xnox> ?
+[15:06] <Hilarie> just type in sync?
+[15:10] <xnox> Hilarie: yes. any user/root.
+[15:10] <Hilarie> did it, right when I asked, buffer amount didn't change :/
+[15:11] <xnox> Hilarie: sure. that's fine, it is ok to keep that stuff in buffers as well as on disk.
+[15:11] <xnox> Hilarie: http://manpages.ubuntu.com/manpages/precise/en/man1/sync.1.html
+[15:11] <xnox> Hilarie: sync guarantees that it is on disk. If you want to recover ram you can do this:
+[15:11] <uvirtbot`> New bug: #999969 in php5 "PHP5 doesn't send errors or warnings to fastcgi clients (dup-of: 1014044)" [Undecided,Confirmed] https://launchpad.net/bugs/999969
+[15:11] <xnox> sync && echo 3 | sudo tee /proc/sys/vm/drop_caches
+[15:12] <Hilarie> Oh, I thought if it was buffer, it didn't exist on disk yet, and if was cache it was on disk, but stored in ram
+[15:12] <Hilarie> Isn't the kernal alot smarter then I am, and will drop it if needed?
+[15:13] <TheLordOfTime> everyone: yeah, ignore uvirtbot` regarding 999969, its whining about what i did.  apparently when i was sruing the fix for 1014044 nobody mentioned 999969, so it missed being marked as "fixed".  just showed upt oday :P
+[15:14]  * TheLordOfTime yawns and removes bug 999969 from the list of triage things he has to look at
+[15:14] <uvirtbot`> Launchpad bug 999969 in php5 "PHP5 doesn't send errors or warnings to fastcgi clients (dup-of: 1014044)" [Undecided,Confirmed] https://launchpad.net/bugs/999969
+[15:14] <uvirtbot`> Launchpad bug 1014044 in php5 "PHP5-FPM not reporting errors to web servers (fastcgi clients, such as nginx)" [Medium,Fix released] https://launchpad.net/bugs/1014044
+[15:14] <TheLordOfTime> silence noob bot!
+[15:14] <Hilarie> hehe
+[15:19] <TheLordOfTime> Hilarie, sorry to intrude on your questions, wanted to make sure other server team members were aware of what I did :P0-
+[15:19] <TheLordOfTime> :P *
+[15:19] <Hilarie> Not a problem
+[15:20] <Hilarie> I just read a buffer doesn't exist on disk yet
+[15:20] <Hilarie> still freakin me out a bit
+[15:20] <xnox> Hilarie: yes, kernel is smart - it does recover ram as of when it needs to.
+[15:20] <xnox> Hilarie: well drop caches with command I pasted, it is safe to run.
+[15:21] <Hilarie> well then it did zero it out
+[15:21] <Hilarie> Thank you xnox
+[15:22] <Hilarie> Can I bother you for one more question? how can I start XBMC via SSH?
+[15:22] <Hilarie> to the monitor attached to the server
+[15:24] <xnox> Hilarie: i don't have any monitors on my servers. Maybe ask on #ubuntu-mythtv ?
+[15:25] <Hilarie> I will give them a shot, sorry, i thought it might be server specific
+[16:21] <SpamapS> TheLordOfTime: pong, wassup?
+[16:27] <rsd> Hello
+[16:28] <rsd> I am having a trouble making saned listen to the tcp4 port, it listens only on the tcp6 one
+[16:28] <rsd> 12.04 (ubuntu)
+[16:28] <rsd> then I found out that If listen to a port tcp4 or tcp6, the same port cannot be opened on the other ipvX protocol
+[16:28] <rsd> is this right?
+[16:29] <rsd> for example:
+[16:29] <rsd> netcat -6 -l 656
+[16:29] <rsd> and then (another terminal): netcat -4 -l 656
+[16:29] <rsd> the second will fail
+[16:29] <rsd> even if I change the order
+[16:30] <rsd> can someone enlight me :)
+[16:32] <TheLordOfTime> SpamapS, erroneous ping, i forgot to say nevermind.
+[16:32] <TheLordOfTime> SpamapS, was going to ask you to sponsor a debdiff, but hten i noticed the bug in question was already fixed by an SRU that i had already had approved/processed
+[16:32] <TheLordOfTime> :P
+[16:32] <SpamapS> ah
+[16:39] <TheLordOfTime> SpamapS, remember the SRU for bug 1014044 / bug 1006738 ?  999969 was an earlier bug than 1014044, but it was never caught.  Apparently, the SRU for 1014044 fixed 999969, if it hadn't been the same upstream patch, i'd've asked you to poke a debidff through sponsoring ;)
+[16:39] <uvirtbot`> Launchpad bug 1014044 in php5 "PHP5-FPM not reporting errors to web servers (fastcgi clients, such as nginx)" [Medium,Fix released] https://launchpad.net/bugs/1014044
+[16:39] <uvirtbot`> Launchpad bug 1006738 in php5 "php5-fpm segfaults with error 4 in libc-2.15.so" [High,Fix released] https://launchpad.net/bugs/1006738
+[16:39] <TheLordOfTime> btu since that's all resolved, i apologize for bugging you.
+[16:39] <SpamapS> TheLordOfTime: So they're the same bug?
+[16:40] <SpamapS> two symptoms, one bug?
+[16:40] <TheLordOfTime> SpamapS, 1014044 and 999969 are the same bug exactly
+[16:40] <TheLordOfTime> different summary lines but same bug.
+[16:40] <TheLordOfTime> and same upstream fix.
+[16:40] <TheLordOfTime> s/fix/bug/
+[16:40] <TheLordOfTime> except 999969 was never on the list of bugs for that SRU
+[16:40] <SpamapS> TheLordOfTime: well I think its appropriate then to mark 999969 as a dupe of 1014044 since 1014044 got the most attention
+[16:40] <TheLordOfTime> already done
+[16:41] <TheLordOfTime> <uvirtbot`> [12/21/12 10:11:53] New bug: #999969 in php5 "PHP5 doesn't send errors or warnings to fastcgi clients (dup-of: 1014044)" [Undecided,Confirmed] https://launchpad.net/bugs/999969
+[16:41] <uvirtbot`> Launchpad bug 999969 in php5 "PHP5 doesn't send errors or warnings to fastcgi clients (dup-of: 1014044)" [Undecided,Confirmed]
+[16:41] <uvirtbot`> Launchpad bug 1014044 in php5 "PHP5-FPM not reporting errors to web servers (fastcgi clients, such as nginx)" [Medium,Fix released]
+[16:41] <SpamapS> oh good :)
+[16:41] <TheLordOfTime> you stupid bot
+[16:41]  * TheLordOfTime slaps uvirtbot`
+[16:41]  * SpamapS notes that in the Matrix mini movies the people who treated the robots badly were the first to have their heads popped like watermelons
+[16:43] <TheLordOfTime> heh.
+=== robos_ is now known as robo
+=== gary_poster is now known as gary_poster|away
+=== gary_poster|away is now known as gary_poster
+=== gary_poster is now known as gary_poster|away
+=== gary_poster|away is now known as gary_poster
+=== erichammond1 is now known as erichammond
+=== erichammond1 is now known as erichammond
+[21:30] <sw0rdfish> i need a good vps provider with vps' in either .se or .nl
+[21:31] <RoyK> why those particular countries?
+[21:31] <RoyK> .se spies on you big time, .nl may as well
+[21:31] <sw0rdfish> oh damn
+[21:31] <sw0rdfish> RoyK... remember me? haha
+[21:32] <sw0rdfish> long time no sees man
+[21:33] <RoyK> indeed
+[21:33] <sw0rdfish> .se vps providers spy on you?
+[21:33] <sw0rdfish> I meant any provider but has vps' in .se or .nl
+[21:34] <RoyK> according to .se law, all foregn traffic can be spied upon
+[21:34] <sw0rdfish> wtf
+[21:34] <sw0rdfish> really?
+[21:34] <sw0rdfish> holy shit
+[21:34] <RoyK> ys
+[21:34] <RoyK> yes
+[21:35] <sw0rdfish> so i guess i'll have to take .nl
+[21:35] <RoyK> possibly better
+[21:35] <RoyK> still eu rules, though
+[21:36] <sw0rdfish> then wtf?
+[21:36] <Amacidia> Hey everyone
+[21:36] <sw0rdfish> else is tere?
+[21:36] <sw0rdfish> there*
+[21:37] <Amacidia> I'm running 12.10 and I was hoping to take a couple extra 1TB seagates and setup RAID 1 with software. Most of the guides I find talk about fresh installs, but I just want these drives on the side to store data. Can anyone point me to a guide that would assist me in doing this?
+[21:38] <Amacidia> Thanks in advance
+[21:38] <RoyK> Amacidia: just setup raid-5 or so, it'll be safe enough
+[21:39] <Amacidia> RoyK, So just install the drives and reload the os, setup raid 5 during the install?
+[21:40] <sarnold> why "reload the os"?
+[21:40] <RoyK> Amacidia: use a separate drive for the root, or a mirror, and use the rest for raid-5 or -6
+[21:41] <RoyK> it's quite stable
+[21:43] <guntbert_> sw0rdfish: are you looking for premium service - or just for something cheap with great support?
+[21:48] <sw0rdfish> cheap
+[21:48] <sw0rdfish> openvz probably cuz xen is costlier
+[21:49] <guntbert_> sw0rdfish: have a look at evixo.com - starts with 4€ - support is just great
+[21:49]  * guntbert_ is just a satisfied customer of them
+[21:49] <sw0rdfish> i have a 5usd UFO1
+[21:50] <JanC> sw0rdfish: The Netherlands do more wiretaps than the FBI...  :p
+[21:51] <sw0rdfish> JanC, ma brotha from anotha motha!
+[21:51] <sw0rdfish> damn, I see you are in every channel :D
+[21:51] <JanC> seriously, why do you care?
+[21:51] <sw0rdfish> why do I care about what JanC ?
+[21:51] <JanC> about what country the VPS is in?
+[21:52] <sw0rdfish> well
+[21:53] <sw0rdfish> ping times is a bit too long with my UFO1
+[21:53] <JanC> what's UFO1 ?
+[21:53] <sw0rdfish> heh
+[21:54] <sw0rdfish> an alienvps JanC
+[21:54] <sw0rdfish> http://alienvps.com/vps-hosting/
+[21:54] <sw0rdfish> :P
+[21:54] <sw0rdfish> its in new york
+[21:54] <sw0rdfish> haha I chose that over las vegas which would've been even farther from me
+[21:54] <JanC> okay, so you want a VPS in Europe?
+[21:55] <sw0rdfish> I might take guntbert_'s recommendation its 4 euros and based in germany
+[21:55] <sw0rdfish> yeah
+[21:55] <JanC> there are several hosting providers in Germany & France offering cheap VPS...
+=== guntbert_ is now known as guntbert
+[22:01] <JanC> e.g. http://www.hetzner.de/  http://www.1und1.de/  http://www.ovh.com/fr/vps/  etc. (and those aren't the cheapest even, I think)
+[22:12] <sw0rdfish> nice
+[22:12] <sw0rdfish> i know ovh :)
+[22:12] <sw0rdfish> omg I might take ovh
+[22:13] <sw0rdfish> I didn' think they had cheap vps' they are pretty expensive big server provider
+=== gary_poster is now known as gary_poster|away
+[22:15] <sw0rdfish> dude 14gbp per month isn't cheap... compared to those 4eur or 5usd ones :P
+[22:20] <sw0rdfish> hey guys, is an ssh tunnel better than vpn?
+[22:20] <sarnold> "better" requires some kind of criteria to judge against :)
+[22:20] <sw0rdfish> heh
+[22:20] <sw0rdfish> yeah
+[22:21] <sarnold> ssh tunnels are definitely simple, nice for one-off uses...
+[22:25] <SinZ> ssh tunnels are amazing, generally slow though
+[22:28] <HelpMeUbuntu> Wow documentation and wiki pages are out of date..
+[22:28] <HelpMeUbuntu> So brand new 12.04 LTS install
+[22:28] <HelpMeUbuntu> Setting up maas--
+[22:28] <HelpMeUbuntu> maas-cli says command not found
+[22:29] <HelpMeUbuntu> mass-import-pxe says command not ofound..
+[22:29] <HelpMeUbuntu> the documentation for setting MAAS up refres to wiki pages that don't exist anymore.
+[22:29] <HelpMeUbuntu> And I could really use some help
+[22:29] <adam_g> HelpMeUbuntu: you might want to check here, i think this is more up to date: https://maas.ubuntu.com/
+[22:29] <HelpMeUbuntu> When my node I'm adding via MAAS boots from PXE it goes and starts but then kernel panic's and dies
+[22:30] <HelpMeUbuntu> I did.
+[22:30] <HelpMeUbuntu> It talks alot about maas-cli
+[22:30] <HelpMeUbuntu> But I sure can't find it..
+[22:30] <HelpMeUbuntu> and neither can Ubuntu 12.04..
+[22:30] <guntbert> adam_g: they definitely borked part of the docs
+[22:30] <HelpMeUbuntu> maas-cli = command not found
+[22:31] <sarnold> can your machines boot 12.04 normally? (perhaps the kernel panic is unrelated to maas?)
+[22:31] <sarnold> I know the maas group wanted their docs overhauled recently, I'm not sure how far along that process is yet...
+[22:31] <HelpMeUbuntu> Yeah
+[22:31] <HelpMeUbuntu> If I load Ubuntu manually that works.
+[22:32] <HelpMeUbuntu> Same thing with I try to boot from Media and do a MAAS install and it just shuts off the system
+[22:32] <sarnold> no kididng, it's PXE specific?
+[22:33] <sarnold> HelpMeUbuntu: you may have better luck in #maas ..
+[22:33] <HelpMeUbuntu> Yep
+[22:33] <adam_g> HelpMeUbuntu: oh right, i think you might need a newer version of MAAS than what was shipped in 12.04. trying to find a PPA with a backport
+[22:33] <HelpMeUbuntu> is it just maas or ubuntu-maas?
+[22:34] <sarnold> >30 in #maas, >2 in #ubuntu-maas, I think I know where I'd go first.. :)
+[22:34] <adam_g> #maas
+[22:37] <adam_g> HelpMeUbuntu: not sure where to get a backport and everyone is probably offline for the holiday already. you might want to consider running 12.10 on the maas provisioning server itself (you can still install 12.04 to the provisioned nodes). MAAS saw some bug changes between 12.04 and 12.10
+[22:42] <HelpMeUbuntu> I'm going to try 12.10 for now
+=== cpg|away is now known as cpg
+=== ibiris is now known as ibiris|afk
+[23:43] <uvirtbot`> New bug: #1093013 in lm-sensors (main) "sensors-detect doesn't find fans on HP ProBook 6560b" [Undecided,New] https://launchpad.net/bugs/1093013
+[23:54] <Delemas> Can anyone point me to a software raid 1 install guide for Ubuntu 12.04 or 12.10? All the ones I can find are obsolete.
+[23:55] <Delemas> Of course that's when I find it in the serverguide....
+[23:56] <sarnold> Delemas: mdadm manpage?
+[23:58] <Delemas> Oh that isn't the problem... I did a 12.10 install on what I expected was a working config with four raid devices for boot swap root and home but grub2 got all confused, then I read the 12.10 installer doesn't work with software raid....
